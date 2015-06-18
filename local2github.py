@@ -30,15 +30,28 @@ prjs = []
 empty_prjs = 0
 for x in prj_categ:
     _path = './cores/' + x
-    for y in next(os.walk(_path))[1]: #get only projects with a tar.gz file in it(not empty)
+    for y in next(os.walk(_path))[1]:
         z = os.listdir(_path + "/" + y)
         for elem in z:
+            #get only projects with a tar.gz file in it(not empty)
             if elem.endswith(".tar.gz"):
-                prjs.append([[x],[y]])
+                z = x[:5] + "_" + y[:10] # branch name encoding
+                prjs.append([[z],[x],[y]])
                 break
 
-# no prjs stores both categories and projects
+# note that from now on prjs stores all info
 print "Number of local non empty projects: ", len(prjs)
+
+# detect projects with the same branch name
+_branches = [x[0][0] for x in prjs]
+dups = [x for x in _branches if _branches.count(x) > 1]
+if len(dups)>0:
+    print "ERROR. Projects with same branch name:", dups
+    sys.exit(0)
+
+if True:
+    sys.exit(0)
+
 
 _txt = '''
 ## VHDL/Verilog IP CORES
@@ -74,9 +87,9 @@ more details.
 '''
 
 for _ind,x in enumerate(prjs):
-    prj_cat = x[0][0]
-    prj_name = x[1][0]
-    prj_branch = str(_ind) + "_" + prj_name
+    prj_branch = x[0][0]
+    prj_cat = x[1][0]
+    prj_name = x[2][0]
     _dir = os.path.join('cores', prj_cat, prj_name)
     for _fl in os.listdir(_dir):
         if _fl.endswith('.tar.gz'):
@@ -107,17 +120,18 @@ for _ind,x in enumerate(prjs):
                     shutil.copyfile(os.path.join(_dir, 'index.html'), os.path.join(_dir, 'src','index.html'))
 
             # just in case you unzipped a zip file(one zip inside another)
-            for x in glob.glob(os.path.join(_dir, 'src', '*')):
-                if x.endswith('.tar.gz') or x.endswith('.tgz'):
-                    tfile = tarfile.open(x, 'r:gz')
+            for _x in glob.glob(os.path.join(_dir, 'src', '*')):
+                if _x.endswith('.tar.gz') or _x.endswith('.tgz'):
+                    tfile = tarfile.open(_x, 'r:gz')
                     tfile.extractall(os.path.join(_dir, 'src'))
                     tfile.close()
-                    os.remove(x)
+                    os.remove(_x)
 
             # deleted not needed files
             if os.path.isfile(os.path.join(_dir, _fl)):
-                if False:
+                if False: # for debugging use False
                     os.remove(os.path.join(_dir, _fl))# remove tar.gz file
+                    
             if os.path.isdir(os.path.join(_dir, 'tmp')):
                 shutil.rmtree(os.path.join(_dir, 'tmp'))# remove original unzipped folder
 
@@ -136,9 +150,9 @@ os.system('git clone --depth=1 ' + _github_addr + ' '+_git_dir)
 
 # create a new branch per project. Copy the project content in it.
 for _ind,x in enumerate(prjs):
-    prj_cat = x[0][0]
-    prj_name = x[1][0]
-    prj_branch = str(_ind) + "_" + prj_name
+    prj_branch = x[0][0]
+    prj_cat = x[1][0]
+    prj_name = x[2][0]
     prj_dir = os.path.join('cores', prj_cat, prj_name)
 
     if os.path.exists(os.path.join(_dir, 'src')) and len(os.listdir(os.path.join(prj_dir,'src')))>0:
@@ -156,20 +170,21 @@ for _ind,x in enumerate(prjs):
         os.chdir(os.path.join('..','..'))
 
 if False:
-    # upload one by one all branches to github
-    for _ind,x in enumerate(prjs):
-        prj_name = x[1][0]
-        prj_branch = str(_ind) + "_" + prj_name
-        prj_dir = os.path.join('cores', prj_cat, prj_name)
-
-        if len(os.listdir(os.path.join(prj_dir,'src')))>0:
-            os.chdir(_git_dir)
-            os.system('git checkout ' + prj_branch)
-            os.system('git push origin '+ prj_branch)
-            # manually enter login and password
-            os.chdir(os.path.join('..','..'))
-
-if False:
     # push all branches at once
     os.system('git push --all origin')
     # manually enter login and password
+
+# if False:
+#     # upload one by one all branches to github
+#     for _ind,x in enumerate(prjs):
+#         prj_branch = x[0][0]
+#         prj_cat = x[1][0]
+#         prj_name = x[2][0]
+#         prj_dir = os.path.join('cores', prj_cat, prj_name)
+#
+#         if len(os.listdir(os.path.join(prj_dir,'src')))>0:
+#             os.chdir(_git_dir)
+#             os.system('git checkout ' + prj_branch)
+#             os.system('git push origin '+ prj_branch)
+#             # manually enter login and password
+#             os.chdir(os.path.join('..','..'))
