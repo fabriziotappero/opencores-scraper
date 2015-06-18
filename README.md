@@ -1,6 +1,4 @@
-
-
-<img src="http://fabriziotappero.github.io/freerangefactory.org/img/icons/logo-frf.png" alt="" width="200" border="10" />
+<img src="http://fabriziotappero.github.io/freerangefactory.org/img/icons/logo-frf.png" alt="www.freerangefactory.org" width="200" border="10" />
 
 ## VHDL/Verilog IP CORES Scripts
 
