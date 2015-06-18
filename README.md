@@ -20,15 +20,14 @@ A list of all projects is available at:
  www.freerangefactory.org/ip_cores.html
 
 Available Python scripts:
- 
-*opencores_scraper.py* is what was used to download all
-opencores.org projects locally (in a local folder in your PC) and generate a
- local index.html.
 
-*local2github.py* is used to upload all the local folder to the github
+**opencores_scraper.py** downloads all opencores.org projects locally 
+(in a local folder in your PC) and generate a n index file index.html.
+
+**local2github.py** is used to upload all the local folder to the github
 repository https://github.com/fabriziotappero/ip-cores
 
-*build_index.py* analyzes the local cores folder and build an index.html a little
+**build_index.py** analyzes the local cores folder and build an index.html a little
 different from the one generated from opencores_scraper.py.
 
 
