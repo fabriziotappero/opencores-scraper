@@ -4,9 +4,9 @@
 '''
 This is a one-file python script that download locally the content of the WHOLE
 project section of the website opencores.org.
-The downloaded content is then stored in a local folder.
+The downloaded content is stored in a local folder.
 To use this script, an opencores.org account is needed. Also note that the whole
-opencores.org database is around 3GB of data.
+opencores.org database is essily >4GB of data.
 
 The Python libraries needed for this script can be installed with the command:
 
@@ -24,18 +24,20 @@ The Python libraries needed for this script can be installed with the command:
 #_______________________________ basic setup ___________________________________
 #
 prj_to_download = 1E99        # set to 1E99 to get all projects
-download_prj_svn = False       # set to True to get opencores project svn acchives (.zip)
-github_upload = False          # set to True to upload all local folder to
+download_prj_svn = False      # set to True to get opencores project svn acchives (.zip)
                               # your github repository
 oc_user='xxxxxxxx'            # opencores.org login
 oc_pwd='xxxxxxxxxxxx'         # opencores.org password
 
-#_______________________________ github upload _________________________________
+#_______________________________ github link    ________________________________
 #
-_github_addr = 'https://github.com/fabriziotappero/ip-cores.git'
+# this link is just used for linking index.html with code source
+#
+_github_addr = 'https://github.com/fabriziotappero/ip-cores/'
 #
 #_______________________________________________________________________________
 
+# prj_brn = prj_nm[:5] + "_" + prj_cat[:10] # branch name encoding creation
 
 # import web scrape tools and other libs
 import re, sys, os, time
@@ -194,111 +196,6 @@ def get_size(_path = '.'):
     else:
         _out = str(round(total_size/1.0E6,2))+' MB' # return size in MB
     return _out
-
-
-
-
-
-
-
-
-
-
-
-
-
-# analyze the current ./cores folder structure and update its content to _github_addr
-def upload_to_github(_github_addr, cores_adrs):
-    # quickly analyze local folder structure and extract all project names
-
-    cores_adrs = "./cores_full"
-    if os.path.isdir(cores_adrs)==False:
-        print 'Local cores folder does not exist.'
-        sys.exit(0)
-
-    prj_categ = next(os.walk(cores_adrs))[1]
-    prjs = []
-    empty_prjs = 0
-    for x in prj_categ:
-        _path = cores_adrs +'/'+ x
-        for y in next(os.walk(_path))[1]:
-            # get only projects with a tar.gz file in it (not empty)
-            z = os.listdir(_path+"/"+y)
-            for elem in z:
-                if elem.endswith(".tar.gz"):
-                    prjs.append([[x],[y]])
-                    break
-
-        #no prjs stores both categories and projects
-        print "Number of local non-empty projects: ", len(prjs)
-        print "Number of local project categories: ", len(prj_categ)
-
-        if len(prjs)==0:
-            print 'No projects available locally'
-            sys.exit(0)
-
-        # unzip project files and move them in its prj folder
-        for x in prjs[:7]:
-            prj_cat = x[0][0]
-            prj_name = x[1][0]
-            z = os.listdir(cores_adrs +'/'+prj_cat+'/'+prj_name+'/')
-            for _fl in z:
-                if _fl.endswith('.tar.gz'):
-                    tfile = tarfile.open(cores_adrs +'/'+prj_cat+'/'+prj_name+'/'+_fl, 'r:gz')
-                    tfile.extractall(cores_adrs +'/'+prj_cat+'/'+prj_name+'/')
-                    print "unzipping project: ", prj_name
-                    os.system('mv '+cores_adrs +'/'+prj_cat+'/'+prj_name+'/'+_fl[:-7]+'/trunk/* '+cores_adrs +'/'+prj_cat+'/'+prj_name+'/')
-                    os.system('rm '+cores_adrs +'/'+prj_cat+'/'+prj_name+'/'+_fl)      # remove tar.gz file
-                    os.system('rm -Rf '+cores_adrs +'/'+prj_cat+'/'+prj_name+'/'+_fl[:-7]) # remove original unzipped folder
-
-        # proceed by cloning remote githup repo master branch
-        os.chdir(cores_adrs)
-        os.system('mkdir git_repo ')
-        os.chdir('./git_repo')
-        os.system('rm -rf ./* ./.*')
-        os.system('git clone --depth=1 '+_github_addr+' .')
-        os.system('touch master.txt')
-        os.system('git add .')
-        os.system('git commit -m "adding files"')
-
-        # create a new branch per project. Copy the project content in it.
-        for x in prjs[:3]:
-            prj_cat = x[0][0]
-            prj_name = x[1][0]
-            # clean local folder
-            os.system('rm -rf ./*')
-            os.system('git checkout --orphan '+prj_name)
-            print "Branch "+prj_name+" just created."
-            os.system('git rm -rf .')
-            os.system('touch README.md')
-            os.system('echo project:'+prj_name+', category:'+prj_cat+' > README.md')
-            # add here all project files
-            os.system('cp -rf ../'+prj_cat+'/'+prj_name+'/* ./')
-            os.system('git add .')
-            os.system('git commit -m "adding all project files"')
-            os.system('git checkout master') # point back to master branch
-
-        # upload (for now one by one) all branches to github
-        print "Uploading all on GITHUB"
-        os.system('git push origin master')
-        for x in prjs[:3]:
-            prj_name = x[1][0]
-            os.system("git push "+_github_addr+" '*:*'")
-
-        return 0
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -554,6 +451,7 @@ for i,x in enumerate(opencores_mem.categories):
         y = re.sub(' ','_',y)
         y = re.sub('/','-',y)
         try:
+            prj_brn = x[:5] + "_" + y[:10] # encode project branch name
             fl_nm = './cores/'+x+'/'+y+'/index.html'
             print 'Writing file:', fl_nm
             fl=open(fl_nm,'w')
@@ -574,9 +472,10 @@ for i,x in enumerate(opencores_mem.categories):
             _out = re.sub('<br/>\n *Statistics:\n *\n *View','',_out)
 
             # add source code link at the top
-            _link = opencores_mem.projects_download_url[i][ii].encode('utf-8')
-            source_ln = re.sub('http://www.opencores.org/download,', '', _link)
-            source_ln = source_ln +'.tar.gz'
+            #_link = opencores_mem.projects_download_url[i][ii].encode('utf-8')
+            #source_ln = re.sub('http://www.opencores.org/download,', '', _link)
+            #source_ln = source_ln +'.tar.gz'
+            source_ln = _github_addr +"tree/"+ prj_brn
             fl.write('<a href="javascript:history.go(-1)" onMouseOver="self.status=document.referrer;return true">Go Back</a>\n')
             fl.write("<p align='right'><a href='" + source_ln + "'>Source code</a></p>\n")
 
@@ -702,16 +601,15 @@ fl.write('''
 <thead>
     <tr>
         <th width="30%">Project Name</th>
-        <th width="5%">.zip Archive</th>
+        <th width="5%">Repository</th>
         <th width="8%">Last Update</th>
         <th width="8%">Language</th>
-        <th width="5%">Dev. status</th>
+        <th width="5%">Dev. Status</th>
         <th width="5%">License</th>
     </tr>
 </thead>
     <tbody>
 ''')
-
 
 for i,x in enumerate(opencores_mem.projects_download_url):
     _c = opencores_mem.categories[i].encode('utf-8')
@@ -727,7 +625,11 @@ for i,x in enumerate(opencores_mem.projects_download_url):
         b = re.sub('/','-',b)
         link = a+'/'+b+'/'+'index.html'
         source_ln = re.sub('http://www.opencores.org/download,', '', y)
-        source_ln = a+'/'+b+'/'+ source_ln +'.tar.gz'
+        #source_ln = a+'/'+b+'/'+ source_ln +'.tar.gz'
+
+        prj_brn = a[:5] + "_" + b[:10] # encode project branch name
+        source_ln = _github_addr +"/tree/"+ prj_brn
+
         # shorten the language label if too long
         if len(opencores_mem.projects_lang[i][ii])>7:
             opencores_mem.projects_lang[i][ii]=opencores_mem.projects_lang[i][ii][:7]
@@ -1023,10 +925,3 @@ fl.write('''
 ''')
 fl.close()
 print 'Local jquery.quicksearch.js file created.'
-
-
-# upload the whole local folder ./cores to a github repository
-# note that each local project will be uploaded in a separate branch
-if github_upload != True:
-    sys.exit(0)
-upload_to_github(_github_addr, "./cores")
