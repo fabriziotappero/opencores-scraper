@@ -27,7 +27,4 @@ Available Python scripts:
 **local2github.py** analyze a local folder and upload its content to the github
 repository https://github.com/fabriziotappero/ip-cores
 
-**build_index.py** analyzes the local cores folder and build an index.html a little
-different from the one generated from opencores_scraper.py.
-
 
