@@ -24,7 +24,7 @@ Available Python scripts:
 **opencores_scraper.py** downloads all opencores.org projects locally 
 (in a local folder in your PC) and generate a n index file index.html.
 
-**local2github.py** is used to upload all the local folder to the github
+**local2github.py** analyze a local folder and upload its content to the github
 repository https://github.com/fabriziotappero/ip-cores
 
 **build_index.py** analyzes the local cores folder and build an index.html a little
