@@ -1,3 +1,5 @@
+http://fabriziotappero.github.io/freerangefactory.org/img/icons/logo-frf.png
+
 ## VHDL/Verilog IP CORES Scripts
 
 This repository contains few Python scripts capable to connect to the website 
