@@ -559,6 +559,7 @@ if download_prj_svn:
     fl.close()
 
 # create a global index.html with a list of all projects in a table format
+# NOTE that projects without a source code folder will not be added to index.html
 if not os.path.exists('./cores'):
     os.makedirs('./cores')
 fl=open('./cores/index.html','w')
@@ -617,6 +618,11 @@ for i,x in enumerate(opencores_mem.projects_download_url):
     fl.write('  <b> Category: '+_c.upper()+'</b>'+'\n')
     fl.write("</td></tr>\n")
     for ii,y in enumerate(opencores_mem.projects_download_url[i]):
+
+        # skip this project if empty
+        if opencores_mem.projects_to_be_downloaded_flag[i][ii]==False:
+            break
+
         y = y.encode('utf-8')
         _n = opencores_mem.projects_name[i][ii]
         a = re.sub(' ','_',_c)
