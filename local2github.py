@@ -27,6 +27,7 @@ from distutils.dir_util import copy_tree
 
 prj_categ = next(os.walk('./cores'))[1]
 prjs = []
+_iii=1
 empty_prjs = 0
 for x in prj_categ:
     _path = './cores/' + x
@@ -35,6 +36,14 @@ for x in prj_categ:
         for elem in z:
             #get only projects with a tar.gz file in it(not empty)
             if elem.endswith(".tar.gz"):
+
+                # skip projects that are too big
+                _size=round(os.path.getsize(os.path.join(_path,y,elem))/1.0E6,2) #size in MB
+                if _size>85:
+                    print _iii, "--", y, "is",_size,"MB. SKIPPING IT"
+                    _iii += 1
+                    break
+
                 z = x[:5] + "_" + y[:30] # branch name encoding creation
                 prjs.append([[z],[x],[y]])
                 break
@@ -86,6 +95,7 @@ FITNESS FOR A	PARTICULAR PURPOSE. See the GNU General Public License for
 more details.
 '''
 
+############################### MAIN ###########################################
 for _ind,x in enumerate(prjs):
     prj_branch = x[0][0]
     prj_cat = x[1][0]
