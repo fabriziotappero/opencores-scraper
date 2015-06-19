@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 #
-# www.freerangefactory.org
-#
 '''
 This is a one-file python script that download locally the content of the WHOLE
 project section of the website opencores.org.
@@ -114,7 +112,7 @@ class opencores():
         self.projects_num=[]
         self.projects_html_info=[]
         self.projects_download_url=[]
-        self.projects_to_be_downloaded_flag=[]
+        self.projects_can_be_downloaded=[]
         self.projects_created = []
         self.projects_last_update = []
         self.projects_archive_last_update = []
@@ -297,7 +295,7 @@ print 'Allocating memory to store opencores.org content.'
 for x in opencores_mem.projects_name:
     opencores_mem.projects_html_info.append(['None']*len(x))
     opencores_mem.projects_download_url.append(['Unknown']*len(x))
-    opencores_mem.projects_to_be_downloaded_flag.append([True]*len(x))
+    opencores_mem.projects_can_be_downloaded.append([True]*len(x))
     opencores_mem.projects_created.append(['Unknown']*len(x))
     opencores_mem.projects_last_update.append(['Unknown']*len(x))
     opencores_mem.projects_archive_last_update.append(['Unknown']*len(x))
@@ -335,7 +333,6 @@ for i,x in enumerate(opencores_mem.projects_name):
             opencores_mem.projects_download_url[i][ii] = 'No_svn_archive_link_available'
             print 'WARNING. LATEST SVN DOWNLOAD LINK NOT FOUND\n'
             prj_without_svn_count += 1
-
 
         # extract some info from the page. Because of the complicated structure
         # of these html pages, this info extraction is not so easy.
@@ -407,8 +404,14 @@ for i,x in enumerate(opencores_mem.projects_name):
         # category   = _lxml_content.cssselect('div.content p')[1].cssselect('a')[0].text
 
         ###################### this will download only some info files per category
-        if ii >= prj_to_download:
-            break
+
+# based on the html information extracted for each project mark with False each
+# projects without an SVN link
+# TEST THIS
+for i,x in enumerate(opencores_mem.projects_name):
+    for ii,y in enumerate(x):
+        if 'No_svn_archive_link_available' in opencores_mem.projects_download_url[i][ii]
+            opencores_mem.projects_can_be_downloaded[i][ii] = False
 
 # rename any project name that appears double
 for i,x in enumerate(opencores_mem.projects_name):
@@ -487,7 +490,7 @@ for i,x in enumerate(opencores_mem.categories):
         except:
             pass
 
-# count how many downloadable .zip projects are available for download
+# count how many projects actually have a downloadable source code file.
 av_size = 0
 for x in opencores_mem.projects_download_url:
     for y in x:
@@ -505,7 +508,7 @@ print 'Time:', time.asctime()
 
 # let's begin from a download all configuration. Remember that
 # all flags are in fact set to "True" during the creation
-# of the list "opencores_mem.projects_to_be_downloaded_flag"
+# of the list "opencores_mem.projects_can_be_downloaded"
 #DOWNLOAD_TYPE = 'total'
 
 # let's see now if we can avoid some downloads
@@ -524,17 +527,17 @@ if os.path.isfile('./cores/opencores_local.pkl'):
                         # bingo ! this project y does not need to be upgraded
                         #DOWNLOAD_TYPE = 'partial'
                         print "WARNING. the project", y, "doesn't need to be downloaded."
-                        opencores_mem.projects_to_be_downloaded_flag[i][ii]=False
+                        opencores_mem.projects_can_be_downloaded[i][ii]=False
     del opencores_mem_local
 
-# let's download all project archives flagged as "True" in "opencores_mem.projects_to_be_downloaded_flag"
+# let's download all project archives flagged as "True" in "opencores_mem.projects_can_be_downloaded"
 if download_prj_svn:
     print 'Ready to download', av_size,'.zip project archives.'
     dw_cnt = 0
     for i,x in enumerate(opencores_mem.projects_download_url):
         for ii,y in enumerate(x):
             y = y.encode('utf-8')
-            if ('http://www.opencores.org/download,' in y) and opencores_mem.projects_to_be_downloaded_flag[i][ii]==True:
+            if ('http://www.opencores.org/download,' in y) and opencores_mem.projects_can_be_downloaded[i][ii]==True:
                 r = br.open(y)
                 tar_gz_content = r.read()
                 fl_nm = re.sub('http://www.opencores.org/download,', '', y)
@@ -561,7 +564,8 @@ if download_prj_svn:
     fl.close()
 
 # create a global index.html with a list of all projects in a table format
-# NOTE that projects without a source code folder will not be added to index.html
+# NOTE THAT projects without a source code folder will not be added to index.html
+#
 if not os.path.exists('./cores'):
     os.makedirs('./cores')
 fl=open('./cores/index.html','w')
@@ -622,7 +626,8 @@ for i,x in enumerate(opencores_mem.projects_download_url):
     for ii,y in enumerate(opencores_mem.projects_download_url[i]):
 
         # skip this project if empty
-        if opencores_mem.projects_to_be_downloaded_flag[i][ii]==False:
+        # TEST THIS
+        if opencores_mem.projects_can_be_downloaded[i][ii]==False:
             break
 
         y = y.encode('utf-8')
