@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 #
+# www.freerangefactory.org
+#
 '''
 This is a one-file python script that analyze the content of a local folder
 name ./cores and upload its content to github.
