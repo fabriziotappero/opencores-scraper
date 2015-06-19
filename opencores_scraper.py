@@ -638,8 +638,9 @@ for i,x in enumerate(opencores_mem.projects_download_url):
         b = re.sub('/','-',b)
         link = a+'/'+b+'/'+'index.html'
         source_ln = re.sub('http://www.opencores.org/download,', '', y)
-        #source_ln = a+'/'+b+'/'+ source_ln +'.tar.gz'
+        source_ln = a+'/'+b+'/'+ source_ln +'.tar.gz'
 
+        # let´s link this iwith project source on the github webpage
         prj_brn = a[:5] + "_" + b[:10] # encode project branch name
         source_ln = _github_addr +"/tree/"+ prj_brn
 
@@ -654,7 +655,7 @@ for i,x in enumerate(opencores_mem.projects_download_url):
         html_info = html_info[250:850] # trip it and just get the last 600 characters
 
         fl.write("<tr><th>")
-        # here the use of a hidden field allows tho bind this project with its
+        # here the use of a hidden field allows to bind this project with its
         # group. Very good for the search function.
         fl.write("<div hidden>"+_c+' '+html_info+"</div><a href='"+link+"'>"+_n+"</a>") # project name
         fl.write("</th><td>")
