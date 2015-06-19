@@ -12,7 +12,7 @@ opencores.org database is essily >4GB of data.
 
 The Python libraries needed for this script can be installed with the command:
 
-    sudo pip install beautifulsoup mechanize cssselect
+    sudo pip install beautifulsoup mechanize cssselect lxml
 '''
 #
 # HOW TO USE THIS SCRIPT
