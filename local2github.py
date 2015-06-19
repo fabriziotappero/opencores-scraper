@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
 #
-# www.freerangefactory.org
-#
 '''
 This is a one-file python script that analyze the content of a local folder
 name ./cores and upload its content to github.
@@ -37,7 +35,7 @@ for x in prj_categ:
         for elem in z:
             #get only projects with a tar.gz file in it(not empty)
             if elem.endswith(".tar.gz"):
-                z = x[:5] + "_" + y[:10] # branch name encoding
+                z = x[:5] + "_" + y[:30] # branch name encoding creation
                 prjs.append([[z],[x],[y]])
                 break
 
@@ -51,7 +49,7 @@ if len(dups)>0:
     print "ERROR. Projects with same branch name:", dups
     sys.exit(0)
 
-if True:
+if False:
     sys.exit(0)
 
 
@@ -101,7 +99,7 @@ for _ind,x in enumerate(prjs):
             tfile.extractall(os.path.join(_dir, 'tmp'))
             tfile.close()
             if os.path.exists(os.path.join(_dir, 'src')):
-                shutil.rmtree(os.path.join(_dir, 'src'))
+                shutil.rmtree(os.path.join(_dir, 'src'), ignore_errors=True)
 
             # copy all svn trunk in fresh src folder. If trunk does not exist
             # copy the whole thing.
@@ -133,22 +131,24 @@ for _ind,x in enumerate(prjs):
             if os.path.isfile(os.path.join(_dir, _fl)):
                 if False: # for debugging use False
                     os.remove(os.path.join(_dir, _fl))# remove tar.gz file
-                    
-            if os.path.isdir(os.path.join(_dir, 'tmp')):
-                shutil.rmtree(os.path.join(_dir, 'tmp'))# remove original unzipped folder
 
-if False:
-    sys.exit(0)
+            if os.path.isdir(os.path.join(_dir, 'tmp')):
+                # remove original unzipped folder
+                shutil.rmtree(os.path.join(_dir, 'tmp'), ignore_errors=True)
 
 # proceed with git, created a local git folder
 _git_dir = os.path.join('cores', 'git_dir')
 if os.path.isdir(_git_dir):
-    shutil.rmtree(_git_dir)
+    shutil.rmtree(_git_dir, ignore_errors=True)
 os.mkdir(_git_dir)
+
+if True:
+    sys.exit(0)
 
 # download (locally) only master branch from the defaul github repository that
 # you specified at the beginning of this file
 os.system('git clone --depth=1 ' + _github_addr + ' '+_git_dir)
+#os.system('git init ' +_git_dir)
 
 # create a new branch per project. Copy the project content in it.
 for _ind,x in enumerate(prjs):
@@ -182,6 +182,7 @@ if False:
         prj_branch = x[0][0]
         os.system("git push origin --delete " + prj_branch) # delete remote b.
         os.system("git branch -d " + prj_branch)            # delete local b.
+
 
 
 # if False:
