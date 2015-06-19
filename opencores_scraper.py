@@ -414,8 +414,12 @@ for i,x in enumerate(opencores_mem.projects_name):
             opencores_mem.projects_can_be_downloaded[i][ii] = False
 
 # rename any project name that appears double
+# to each name we will add a number to make the project name unique. In this way
+# we will use the project name as branch nam on gitb
+# TEST THIS
 for i,x in enumerate(opencores_mem.projects_name):
-    opencores_mem.projects_name[i] = rename_multiple(opencores_mem.projects_name[i])
+    opencores_mem.projects_name[i] = str(i)+_+rename_multiple(opencores_mem.projects_name[i])
+
 
 # store locally all info about the latest content of opencores website
 # this file is not really used. pickle is a good way to store python stuff
