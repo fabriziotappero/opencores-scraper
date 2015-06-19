@@ -174,6 +174,14 @@ if False:
     os.system('git push --all origin')
     # manually enter login and password
 
+if False:
+    # delete all remote and local branches
+    for _ind,x in enumerate(prjs):
+        prj_branch = x[0][0]
+        os.system("git push origin --delete " + prj_branch) # delete remote b.
+        os.system("git branch -d " + prj_branch)            # delete local b.
+
+
 # if False:
 #     # upload one by one all branches to github
 #     for _ind,x in enumerate(prjs):
