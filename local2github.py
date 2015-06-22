@@ -18,7 +18,7 @@ The Python libraries needed for this script can be installed with the command:
  2) configure the git address _github_addr
  3) run this script with the command:  ./local2git.py
 '''
-_max_num_prjs = 2 # set to 1E99 if you are not debugging
+_max_num_prjs = 1E99 # set to 1E99 if you are not debugging
 _github_addr = 'https://github.com/fabriziotappero/ip-cores.git'
 _cores_dir = "cores"
 
@@ -105,8 +105,8 @@ for _ind,x in enumerate(prjs):
     for _fl in os.listdir(_dir):
         if _fl.endswith('.tar.gz'):
             prj_real_name = _fl[: -7]
-            # if project code is >120MB let's skip it
-            if (os.path.getsize(os.path.join(_dir, _fl))/1.0E6) > 120:# MB
+            # if project code is >180MB let's skip it
+            if (os.path.getsize(os.path.join(_dir, _fl))/1.0E6) > 180:# MB
                 print "Project:",_fl, ">120MB. Skipping it"
                 break
             try:
@@ -196,7 +196,7 @@ os.system("git checkout master")
 os.system('rm -Rf ./*')
 with open("README.md", 'w') as _file:
     _file.writelines("## VHDL/Verilog IP Cores Repository\n\n")
-    _file.writelines("This repository contains over 1000 free and open-source VHDL/Verilog IP cores.\n")
+    _file.writelines("This repository contains approximately 900 free and open-source VHDL/Verilog IP cores.\n")
     _file.write("Cores can be fetched idependently by downloading ony the branch\n")
     _file.write("you are interested in.\n\n")
     _file.write("A cool searchable index of the whole repo is available from www.freerangefactory.org.\n\n")
