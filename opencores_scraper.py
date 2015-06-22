@@ -24,7 +24,7 @@ The Python libraries needed for this script can be installed with the command:
 #_______________________________ basic setup ___________________________________
 #
 prj_per_cat_to_download = 1E99 # set to 1E99 to get all projects
-download_prj_svn = False       # set to True to get opencores project svn (.zip)
+download_prj_svn = True        # set to True to get opencores project svn (.zip)
                                # your github repository
 oc_user='xxxxxxxx'             # opencores.org login
 oc_pwd='xxxxxxxxxxxx'          # opencores.org password
@@ -326,8 +326,15 @@ for i,x in enumerate(opencores_mem.projects_name):
             break
 
         _url=opencores_mem.projects_url[i][ii]
-        print '[' + time.asctime() + ']','\nDownloading HTML information from:\n', _url
-        whole_html = br.open(_url).read()
+        # let's download the content of the page handling a possible error
+        while True:
+            try:
+                print '[' + time.asctime() + ']','\nDownloading HTML from:', _url
+                whole_html = br.open(_url).read()
+                break
+            except:
+                print "WARNING. Getting some http error. Trying again..."
+
         _html = filter_html(whole_html)
         opencores_mem.projects_html_info[i][ii] = _html
 
@@ -338,7 +345,8 @@ for i,x in enumerate(opencores_mem.projects_name):
         found_flag = False
         for x in links:
             if x.text == 'download':
-                if  x.get('href').replace('download,','') != '': # if it's not an empty link
+                # if it's not an empty link
+                if  x.get('href').replace('download,','') != '':
                     opencores_mem.projects_download_url[i][ii] = 'http://www.opencores.org' + x.get('href')
                     print 'Latest download link found at:\nhttp://www.opencores.org' + x.get('href')+'\n'
                     found_flag = True
@@ -558,8 +566,18 @@ if download_prj_svn:
 
             y = y.encode('utf-8')
             if ('http://www.opencores.org/download,' in y) and opencores_mem.projects_can_be_downloaded[i][ii]==True:
-                r = br.open(y)
-                tar_gz_content = r.read()
+
+                # download svn file. Here we  do some error handling as done
+                # when we downloaded the project html content
+                while True:
+                    try:
+                        r = br.open(y)
+                        tar_gz_content = r.read()
+                        print "Downloaded repository", y
+                        break
+                    except:
+                        print "WARNING. Getting some http error. Trying again..."
+                        
                 fl_nm = re.sub('http://www.opencores.org/download,', '', y)
                 a = re.sub(' ','_',opencores_mem.categories[i])
                 b = re.sub(' ','_',opencores_mem.projects_name[i][ii])
