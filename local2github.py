@@ -18,47 +18,39 @@ The Python libraries needed for this script can be installed with the command:
  2) configure the git address _github_addr
  3) run this script with the command:  ./local2git.py
 '''
-
+_max_num_prjs = 6 # set to 1E99 if you are not debugging
 _github_addr = 'https://github.com/fabriziotappero/ip-cores.git'
+_cores_dir = "cores_s"
 
 import sys, os, shutil, glob
 import tarfile
 from distutils.dir_util import copy_tree
 
-prj_categ = next(os.walk('./cores'))[1]
+prj_categ = next(os.walk(_cores_dir))[1]
 prjs = []
-_iii=1
 empty_prjs = 0
 for x in prj_categ:
-    _path = './cores/' + x
-    for y in next(os.walk(_path))[1]:
+    _path = os.path.join(_cores_dir,x)
+    for y in next(os.walk(_path))[1]: #get only projects with a tar.gz file in it(not empty)
         z = os.listdir(_path + "/" + y)
         for elem in z:
-            #get only projects with a tar.gz file in it(not empty)
             if elem.endswith(".tar.gz"):
-
-                # skip projects that are too big
-                _size=round(os.path.getsize(os.path.join(_path,y,elem))/1.0E6,2) #size in MB
-                if _size>85:
-                    print _iii, "--", y, "is",_size,"MB. SKIPPING IT"
-                    _iii += 1
-                    break
-
-                z = x[:5] + "_" + y[:30] # branch name encoding creation
-                prjs.append([[z],[x],[y]])
+                prjs.append([[x],[y]])
                 break
 
-# note that from now on prjs stores all info
+# note that prjs stores both categories and projects
 print "Number of local non empty projects: ", len(prjs)
 
-# detect projects with the same branch name
-_branches = [x[0][0] for x in prjs]
-dups = [x for x in _branches if _branches.count(x) > 1]
+# detect possible duplicates in branch names
+branches = []
+for _ind,x in enumerate(prjs):
+    prj_cat = x[0][0]
+    prj_name = x[1][0]
+    prj_branch = prj_cat+"_"+prj_name
+    branches.append(prj_branch)
+dups = [x for x in branches if branches.count(x) > 1]
 if len(dups)>0:
     print "ERROR. Projects with same branch name:", dups
-    sys.exit(0)
-
-if False:
     sys.exit(0)
 
 
@@ -95,28 +87,41 @@ FITNESS FOR A	PARTICULAR PURPOSE. See the GNU General Public License for
 more details.
 '''
 
-############################### MAIN ###########################################
 for _ind,x in enumerate(prjs):
-    prj_branch = x[0][0]
-    prj_cat = x[1][0]
-    prj_name = x[2][0]
-    _dir = os.path.join('cores', prj_cat, prj_name)
+    prj_cat = x[0][0]
+    prj_name = x[1][0]
+    prj_branch = prj_cat+"_"+prj_name
+    _dir = os.path.join(_cores_dir, prj_cat, prj_name)
+
+    if _ind>=_max_num_prjs:
+        print _max_num_prjs, "projects have been unzipped. Leaving..."
+        break
+
     for _fl in os.listdir(_dir):
         if _fl.endswith('.tar.gz'):
             prj_real_name = _fl[: -7]
-            print "From:", _dir, "\nUnzipping:", _fl, "\n"
-            tfile = tarfile.open(os.path.join(_dir, _fl), 'r:gz')
-            tfile.extractall(os.path.join(_dir, 'tmp'))
-            tfile.close()
+
+            if (os.path.getsize(os.path.join(_dir, _fl))/1.0E6) > 120: # size in MB
+                print "Project:",_fl, ">120MB. Skipping it"
+                break
+            try:
+                tfile = tarfile.open(os.path.join(_dir, _fl), 'r:gz')
+                tfile.extractall(os.path.join(_dir, 'tmp'))
+                tfile.close()
+            except:
+                print "ERROR. Some problems in unzipping the repo:", os.path.join(_dir, _fl)
             if os.path.exists(os.path.join(_dir, 'src')):
-                shutil.rmtree(os.path.join(_dir, 'src'), ignore_errors=True)
+                shutil.rmtree(os.path.join(_dir, 'src'))
 
             # copy all svn trunk in fresh src folder. If trunk does not exist
             # copy the whole thing.
             if os.path.isdir(os.path.join(_dir, 'tmp', _fl[: -7], 'trunk')):
                 copy_tree(os.path.join(_dir, 'tmp', _fl[: -7], 'trunk'), os.path.join(_dir, 'src'))
+                #print "DEBUG", _dir
+                os.system('cp -Rf '+_dir+'/tmp/'+_fl[: -7]+'/trunk '+_dir+'/src')
             if os.path.isdir(os.path.join(_dir, 'tmp', _fl[: -7], 'web_uploads')):
-                copy_tree(os.path.join(_dir, 'tmp', _fl[: -7], 'web_uploads'), os.path.join(_dir, 'src'))
+                #copy_tree(os.path.join(_dir, 'tmp', _fl[: -7], 'web_uploads'), os.path.join(_dir, 'src'))
+                os.system('cp -Rf '+_dir+'/tmp/'+_fl[: -7]+'/web_uploads '+_dir+'/src')
 
             #elif os.path.isdir(os.path.join(_dir, 'tmp', _fl[: -7])):
             #    shutil.copytree(os.path.join(_dir, 'tmp', _fl[: -7]), os.path.join(_dir, 'src'))
@@ -130,6 +135,7 @@ for _ind,x in enumerate(prjs):
                     shutil.copyfile(os.path.join(_dir, 'index.html'), os.path.join(_dir, 'src','index.html'))
 
             # just in case you unzipped a zip file(one zip inside another)
+            # if project code is >80MB we will skip it
             for _x in glob.glob(os.path.join(_dir, 'src', '*')):
                 if _x.endswith('.tar.gz') or _x.endswith('.tgz'):
                     tfile = tarfile.open(_x, 'r:gz')
@@ -139,35 +145,36 @@ for _ind,x in enumerate(prjs):
 
             # deleted not needed files
             if os.path.isfile(os.path.join(_dir, _fl)):
-                if False: # for debugging use False
+                if False:
                     os.remove(os.path.join(_dir, _fl))# remove tar.gz file
-
             if os.path.isdir(os.path.join(_dir, 'tmp')):
-                # remove original unzipped folder
-                shutil.rmtree(os.path.join(_dir, 'tmp'), ignore_errors=True)
+                shutil.rmtree(os.path.join(_dir, 'tmp'))# remove original unzipped folder
+
+if False:
+    sys.exit(0)
 
 # proceed with git, created a local git folder
-_git_dir = os.path.join('cores', 'git_dir')
+_git_dir = os.path.join(_cores_dir, 'git_dir')
 if os.path.isdir(_git_dir):
-    shutil.rmtree(_git_dir, ignore_errors=True)
+    shutil.rmtree(_git_dir)
 os.mkdir(_git_dir)
-
-if True:
-    sys.exit(0)
 
 # download (locally) only master branch from the defaul github repository that
 # you specified at the beginning of this file
 os.system('git clone --depth=1 ' + _github_addr + ' '+_git_dir)
-#os.system('git init ' +_git_dir)
 
 # create a new branch per project. Copy the project content in it.
 for _ind,x in enumerate(prjs):
-    prj_branch = x[0][0]
-    prj_cat = x[1][0]
-    prj_name = x[2][0]
-    prj_dir = os.path.join('cores', prj_cat, prj_name)
+    prj_cat = x[0][0]
+    prj_name = x[1][0]
+    prj_branch = prj_cat+"_"+prj_name
+    prj_dir = os.path.join(_cores_dir, prj_cat, prj_name)
 
-    if os.path.exists(os.path.join(_dir, 'src')) and len(os.listdir(os.path.join(prj_dir,'src')))>0:
+    if _ind>=_max_num_prjs:
+        print _max_num_prjs, "projects have been unzipped. Leaving..."
+        break
+
+    if os.path.exists(os.path.join(prj_dir, 'src')) and len(os.listdir(os.path.join(prj_dir,'src')))>0:
         # this project is not empty
         os.chdir(_git_dir)
         os.system('git checkout --orphan ' + prj_branch + ' >/dev/null') # create new branch
@@ -182,30 +189,21 @@ for _ind,x in enumerate(prjs):
         os.chdir(os.path.join('..','..'))
 
 if False:
+    # upload one by one all branches to github
+    for _ind,x in enumerate(prjs):
+        prj_cat = x[0][0]
+        prj_name = x[1][0]
+        prj_branch = prj_cat+"_"+prj_name
+        prj_dir = os.path.join(_cores_dir, prj_cat, prj_name)
+
+        if len(os.listdir(os.path.join(prj_dir,'src')))>0:
+            os.chdir(_git_dir)
+            os.system('git checkout ' + prj_branch)
+            os.system('git push origin '+ prj_branch)
+            # manually enter login and password
+            os.chdir(os.path.join('..','..'))
+
+if False:
     # push all branches at once
     os.system('git push --all origin')
     # manually enter login and password
-
-if False:
-    # delete all remote and local branches
-    for _ind,x in enumerate(prjs):
-        prj_branch = x[0][0]
-        os.system("git push origin --delete " + prj_branch) # delete remote b.
-        os.system("git branch -d " + prj_branch)            # delete local b.
-
-
-
-# if False:
-#     # upload one by one all branches to github
-#     for _ind,x in enumerate(prjs):
-#         prj_branch = x[0][0]
-#         prj_cat = x[1][0]
-#         prj_name = x[2][0]
-#         prj_dir = os.path.join('cores', prj_cat, prj_name)
-#
-#         if len(os.listdir(os.path.join(prj_dir,'src')))>0:
-#             os.chdir(_git_dir)
-#             os.system('git checkout ' + prj_branch)
-#             os.system('git push origin '+ prj_branch)
-#             # manually enter login and password
-#             os.chdir(os.path.join('..','..'))
