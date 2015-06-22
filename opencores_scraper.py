@@ -23,11 +23,11 @@ The Python libraries needed for this script can be installed with the command:
 #
 #_______________________________ basic setup ___________________________________
 #
-prj_to_download = 1E99        # set to 1E99 to get all projects
-download_prj_svn = False      # set to True to get opencores project svn acchives (.zip)
-                              # your github repository
-oc_user='xxxxxxxx'            # opencores.org login
-oc_pwd='xxxxxxxxxxxx'         # opencores.org password
+prj_per_cat_to_download = 1E99 # set to 1E99 to get all projects
+download_prj_svn = False       # set to True to get opencores project svn (.zip)
+                               # your github repository
+oc_user='xxxxxxxx'             # opencores.org login
+oc_pwd='xxxxxxxxxxxx'          # opencores.org password
 
 #_______________________________ github link    ________________________________
 #
@@ -37,7 +37,6 @@ _github_addr = 'https://github.com/fabriziotappero/ip-cores/'
 #
 #_______________________________________________________________________________
 
-# prj_brn = prj_nm[:5] + "_" + prj_cat[:10] # branch name encoding creation
 
 # import web scrape tools and other libs
 import re, sys, os, time
@@ -84,7 +83,17 @@ def get_projects(_url):
         x = re.sub(',','',x)
         x = re.sub(':','',x)
         x = re.sub(';','',x)
-        #x = re.sub('.','-',x)
+        x = x.replace('(','')
+        x = x.replace(')','')
+        x = x.replace('[','')
+        x = x.replace(']','')
+        x = x.replace('.','')
+
+        x = x.replace('&','and')
+        x = x.replace('#','')
+        x = x.replace('Ã','')
+        x = x.replace('©','')
+
         x = re.sub(' - ','-',x)
         x = re.sub(' / ','/',x)
         x = x.lstrip().rstrip()
@@ -311,6 +320,11 @@ for i,x in enumerate(opencores_mem.projects_name):
     print 'Project category:',opencores_mem.categories[i].upper()
     # go throuh all the projects in each category
     for ii,y in enumerate(x):
+
+        # exit if exiding max project per category
+        if ii>prj_per_cat_to_download:
+            break
+
         _url=opencores_mem.projects_url[i][ii]
         print '[' + time.asctime() + ']','\nDownloading HTML information from:\n', _url
         whole_html = br.open(_url).read()
@@ -410,16 +424,12 @@ for i,x in enumerate(opencores_mem.projects_name):
 # TEST THIS
 for i,x in enumerate(opencores_mem.projects_name):
     for ii,y in enumerate(x):
-        if 'No_svn_archive_link_available' in opencores_mem.projects_download_url[i][ii]
+        if 'No_svn_archive_link_available' in opencores_mem.projects_download_url[i][ii]:
             opencores_mem.projects_can_be_downloaded[i][ii] = False
 
 # rename any project name that appears double
-# to each name we will add a number to make the project name unique. In this way
-# we will use the project name as branch nam on gitb
-# TEST THIS
 for i,x in enumerate(opencores_mem.projects_name):
-    opencores_mem.projects_name[i] = str(i)+_+rename_multiple(opencores_mem.projects_name[i])
-
+    opencores_mem.projects_name[i] = rename_multiple(opencores_mem.projects_name[i])
 
 # store locally all info about the latest content of opencores website
 # this file is not really used. pickle is a good way to store python stuff
@@ -460,7 +470,6 @@ for i,x in enumerate(opencores_mem.categories):
         y = re.sub(' ','_',y)
         y = re.sub('/','-',y)
         try:
-            prj_brn = x[:5] + "_" + y[:10] # encode project branch name
             fl_nm = './cores/'+x+'/'+y+'/index.html'
             print 'Writing file:', fl_nm
             fl=open(fl_nm,'w')
@@ -481,10 +490,11 @@ for i,x in enumerate(opencores_mem.categories):
             _out = re.sub('<br/>\n *Statistics:\n *\n *View','',_out)
 
             # add source code link at the top
-            #_link = opencores_mem.projects_download_url[i][ii].encode('utf-8')
+            _link = opencores_mem.projects_download_url[i][ii].encode('utf-8')
             #source_ln = re.sub('http://www.opencores.org/download,', '', _link)
             #source_ln = source_ln +'.tar.gz'
-            source_ln = _github_addr +"tree/"+ prj_brn
+            source_ln = _github_addr +"tree/"+x+"_"+y # encode project branch name
+
             fl.write('<a href="javascript:history.go(-1)" onMouseOver="self.status=document.referrer;return true">Go Back</a>\n')
             fl.write("<p align='right'><a href='" + source_ln + "'>Source code</a></p>\n")
 
@@ -536,10 +546,16 @@ if os.path.isfile('./cores/opencores_local.pkl'):
 
 # let's download all project archives flagged as "True" in "opencores_mem.projects_can_be_downloaded"
 if download_prj_svn:
+    _iii = 1
     print 'Ready to download', av_size,'.zip project archives.'
     dw_cnt = 0
     for i,x in enumerate(opencores_mem.projects_download_url):
         for ii,y in enumerate(x):
+
+            # exit if exiding max project per category
+            if ii>prj_per_cat_to_download:
+                break
+
             y = y.encode('utf-8')
             if ('http://www.opencores.org/download,' in y) and opencores_mem.projects_can_be_downloaded[i][ii]==True:
                 r = br.open(y)
@@ -549,6 +565,10 @@ if download_prj_svn:
                 b = re.sub(' ','_',opencores_mem.projects_name[i][ii])
                 a = re.sub('/','-',a)
                 b = re.sub('/','-',b)
+                # let's make the file name unique so that later we can use it
+                # as repository name (not used now)
+                #fl_nm = str(_iii) + fl_nm
+                #_iii +=1
                 fl_nm = './cores/'+a+'/'+b+'/'+fl_nm+'.tar.gz'
                 print 'Saving file:', fl_nm
                 fl=open(fl_nm, 'wb')
@@ -568,8 +588,6 @@ if download_prj_svn:
     fl.close()
 
 # create a global index.html with a list of all projects in a table format
-# NOTE THAT projects without a source code folder will not be added to index.html
-#
 if not os.path.exists('./cores'):
     os.makedirs('./cores')
 fl=open('./cores/index.html','w')
@@ -625,17 +643,19 @@ fl.write('''
 for i,x in enumerate(opencores_mem.projects_download_url):
     _c = opencores_mem.categories[i].encode('utf-8')
     fl.write("<tr><td>")
-    fl.write('  <b> Category: '+_c.upper()+'</b>'+'\n')
+    fl.write('  <b>'+_c.upper()+'</b>'+'\n')
     fl.write("</td></tr>\n")
     for ii,y in enumerate(opencores_mem.projects_download_url[i]):
-
-        # skip this project if empty
-        # TEST THIS
-        if opencores_mem.projects_can_be_downloaded[i][ii]==False:
-            break
-
         y = y.encode('utf-8')
         _n = opencores_mem.projects_name[i][ii]
+
+        # skip this project if empty
+        # It does NOT seem to work!
+        if opencores_mem.projects_can_be_downloaded[i][ii]==False:
+            #print "Project", _n, "seems empty. Skipping it."
+            #break
+            pass
+
         a = re.sub(' ','_',_c)
         b = re.sub(' ','_',_n)
         a = re.sub('/','-',a)
@@ -645,8 +665,7 @@ for i,x in enumerate(opencores_mem.projects_download_url):
         source_ln = a+'/'+b+'/'+ source_ln +'.tar.gz'
 
         # let´s link this iwith project source on the github webpage
-        prj_brn = a[:5] + "_" + b[:10] # encode project branch name
-        source_ln = _github_addr +"/tree/"+ prj_brn
+        source_ln = _github_addr +"tree/"+a+"_"+b
 
         # shorten the language label if too long
         if len(opencores_mem.projects_lang[i][ii])>7:
