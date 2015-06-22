@@ -20,7 +20,7 @@ The Python libraries needed for this script can be installed with the command:
 '''
 _max_num_prjs = 2 # set to 1E99 if you are not debugging
 _github_addr = 'https://github.com/fabriziotappero/ip-cores.git'
-_cores_dir = "cores_s"
+_cores_dir = "cores"
 
 import sys, os, shutil, glob
 import tarfile
