@@ -18,7 +18,7 @@ The Python libraries needed for this script can be installed with the command:
  2) configure the git address _github_addr
  3) run this script with the command:  ./local2git.py
 '''
-_max_num_prjs = 6 # set to 1E99 if you are not debugging
+_max_num_prjs = 2 # set to 1E99 if you are not debugging
 _github_addr = 'https://github.com/fabriziotappero/ip-cores.git'
 _cores_dir = "cores_s"
 
@@ -31,7 +31,8 @@ prjs = []
 empty_prjs = 0
 for x in prj_categ:
     _path = os.path.join(_cores_dir,x)
-    for y in next(os.walk(_path))[1]: #get only projects with a tar.gz file in it(not empty)
+    # get only projects with a tar.gz file in it(not empty)
+    for y in next(os.walk(_path))[1]:
         z = os.listdir(_path + "/" + y)
         for elem in z:
             if elem.endswith(".tar.gz"):
@@ -55,26 +56,30 @@ if len(dups)>0:
 
 
 _txt = '''
-## VHDL/Verilog IP CORES
+## VHDL/Verilog IP Cores Repository
 
-The following branch contains the following VHDL/VERILOG IP Code.
+This branch contains the following VHDL/Verilog IP Code:
 
-Project name: %s
+    Project name: %s
+    Project category: %s
+    Project branch: %s
 
-Project category: %s
+This whole github repository is huge and, since IP cores are stored in separate
+branches, it is a good idea to just download the branch that you are interested
+in. This branch can be downloaded with the git command.
 
-Project branch: %s
+    git clone -b %s --single-branch https://github.com/fabriziotappero/ip-cores.git
 
-This whole github repository contains approximately **4.5GB of free and open source
-IP cores**. To download only this project you can use the git command:
+A cool searchable index of the whole repo is available from www.freerangefactory.org.
+'''
 
-**git clone -b %s --single-branch https://github.com/fabriziotappero/ip-cores.git**
+_license='''
 
 ### License
 
-This code was taken "as is" from the website opencores.org.
-The copyright owner of this IP code is the original author of the code. For
-more information have a look at index.html or at the website opencores.org
+This code of each IP core was taken "as is" from the website opencores.org.
+The copyright owner of each IP code is the author of the code itself. For
+more information refer to the index.html or go to the website opencores.org
 
 This code is free software; you can redistribute it and/or modify it under the
 terms of the http://www.gnu.org/licenses/gpl.html (GNU General Public License)
@@ -100,8 +105,8 @@ for _ind,x in enumerate(prjs):
     for _fl in os.listdir(_dir):
         if _fl.endswith('.tar.gz'):
             prj_real_name = _fl[: -7]
-
-            if (os.path.getsize(os.path.join(_dir, _fl))/1.0E6) > 120: # size in MB
+            # if project code is >120MB let's skip it
+            if (os.path.getsize(os.path.join(_dir, _fl))/1.0E6) > 120:# MB
                 print "Project:",_fl, ">120MB. Skipping it"
                 break
             try:
@@ -109,33 +114,28 @@ for _ind,x in enumerate(prjs):
                 tfile.extractall(os.path.join(_dir, 'tmp'))
                 tfile.close()
             except:
-                print "ERROR. Some problems in unzipping the repo:", os.path.join(_dir, _fl)
+                print "ERROR. Problems unzipping repo:",os.path.join(_dir, _fl)
             if os.path.exists(os.path.join(_dir, 'src')):
                 shutil.rmtree(os.path.join(_dir, 'src'))
 
             # copy all svn trunk in fresh src folder. If trunk does not exist
             # copy the whole thing.
             if os.path.isdir(os.path.join(_dir, 'tmp', _fl[: -7], 'trunk')):
-                copy_tree(os.path.join(_dir, 'tmp', _fl[: -7], 'trunk'), os.path.join(_dir, 'src'))
-                #print "DEBUG", _dir
+                #copy_tree(os.path.join(_dir, 'tmp', _fl[: -7], 'trunk'), os.path.join(_dir, 'src'))
                 os.system('cp -Rf '+_dir+'/tmp/'+_fl[: -7]+'/trunk '+_dir+'/src')
             if os.path.isdir(os.path.join(_dir, 'tmp', _fl[: -7], 'web_uploads')):
                 #copy_tree(os.path.join(_dir, 'tmp', _fl[: -7], 'web_uploads'), os.path.join(_dir, 'src'))
                 os.system('cp -Rf '+_dir+'/tmp/'+_fl[: -7]+'/web_uploads '+_dir+'/src')
 
-            #elif os.path.isdir(os.path.join(_dir, 'tmp', _fl[: -7])):
-            #    shutil.copytree(os.path.join(_dir, 'tmp', _fl[: -7]), os.path.join(_dir, 'src'))
-
             # add README.md file and index file
             if os.path.isdir(os.path.join(_dir,'src')):
                 with open(os.path.join(_dir,'src','README.md'), 'w') as _file:
-                    _file.write(_txt % (prj_name, prj_cat, prj_branch, prj_branch))
+                    _file.write(_txt % (prj_name, prj_cat, prj_branch, prj_branch)+_license)
             if os.path.isfile(os.path.join(_dir, 'index.html')):
                 if os.path.isdir(os.path.join(_dir,'src')):
                     shutil.copyfile(os.path.join(_dir, 'index.html'), os.path.join(_dir, 'src','index.html'))
 
             # just in case you unzipped a zip file(one zip inside another)
-            # if project code is >80MB we will skip it
             for _x in glob.glob(os.path.join(_dir, 'src', '*')):
                 if _x.endswith('.tar.gz') or _x.endswith('.tgz'):
                     tfile = tarfile.open(_x, 'r:gz')
@@ -143,17 +143,17 @@ for _ind,x in enumerate(prjs):
                     tfile.close()
                     os.remove(_x)
 
-            # deleted not needed files
+            # delete not needed files
             if os.path.isfile(os.path.join(_dir, _fl)):
                 if False:
-                    os.remove(os.path.join(_dir, _fl))# remove tar.gz file
+                    # remove tar.gz file. Keep it if you like.
+                    os.remove(os.path.join(_dir, _fl))
             if os.path.isdir(os.path.join(_dir, 'tmp')):
-                shutil.rmtree(os.path.join(_dir, 'tmp'))# remove original unzipped folder
-
-if False:
-    sys.exit(0)
+                # remove original unzipped folder
+                shutil.rmtree(os.path.join(_dir, 'tmp'))
 
 # proceed with git, created a local git folder
+# delete previous one
 _git_dir = os.path.join(_cores_dir, 'git_dir')
 if os.path.isdir(_git_dir):
     shutil.rmtree(_git_dir)
@@ -177,33 +177,56 @@ for _ind,x in enumerate(prjs):
     if os.path.exists(os.path.join(prj_dir, 'src')) and len(os.listdir(os.path.join(prj_dir,'src')))>0:
         # this project is not empty
         os.chdir(_git_dir)
-        os.system('git checkout --orphan ' + prj_branch + ' >/dev/null') # create new branch
-        os.system('git rm --cached -r . >/dev/null') # empty the new branch
+        # create new branch
+        os.system('git checkout --orphan ' + prj_branch + ' >/dev/null')
+        os.system('git rm --cached -r . >/dev/null') # empty new branch
         os.system('rm -Rf ./*')
 
-        os.system('cp -Rf ../../'+prj_dir+'/src/* .') # add all project files into branch
+        # add all project files into branch
+        os.system('cp -Rf ../../'+prj_dir+'/src/* .')
 
         os.system('git add .') # add project into branch
         os.system("git commit -m 'added content for project'") # add project into branch
-        os.system("git checkout master") # add project into branch
+        os.system("git checkout master")
         os.chdir(os.path.join('..','..'))
 
-if False:
-    # upload one by one all branches to github
+# build master branch
+os.chdir(_git_dir)
+os.system("git checkout master")
+os.system('rm -Rf ./*')
+with open("README.md", 'w') as _file:
+    _file.writelines("## VHDL/Verilog IP Cores Repository\n\n")
+    _file.writelines("This repository contains over 1000 free and open-source VHDL/Verilog IP cores.\n")
+    _file.write("Cores can be fetched idependently by downloading ony the branch\n")
+    _file.write("you are interested in.\n\n")
+    _file.write("A cool searchable index of the whole repo is available from www.freerangefactory.org.\n\n")
+    _file.write("These are the available branches:\n\n")
     for _ind,x in enumerate(prjs):
         prj_cat = x[0][0]
         prj_name = x[1][0]
         prj_branch = prj_cat+"_"+prj_name
-        prj_dir = os.path.join(_cores_dir, prj_cat, prj_name)
+        _file.write("    "+prj_branch+"\n")
+    _file.write(_license)
 
-        if len(os.listdir(os.path.join(prj_dir,'src')))>0:
-            os.chdir(_git_dir)
-            os.system('git checkout ' + prj_branch)
-            os.system('git push origin '+ prj_branch)
-            # manually enter login and password
-            os.chdir(os.path.join('..','..'))
+os.system('git add .')
+os.system("git commit -m 'added content for project'")
+
+# if False:
+#     # upload one by one all branches to github
+#     for _ind,x in enumerate(prjs):
+#         prj_cat = x[0][0]
+#         prj_name = x[1][0]
+#         prj_branch = prj_cat+"_"+prj_name
+#         prj_dir = os.path.join(_cores_dir, prj_cat, prj_name)
+#
+#         if len(os.listdir(os.path.join(prj_dir,'src')))>0:
+#             os.chdir(_git_dir)
+#             os.system('git checkout ' + prj_branch)
+#             os.system('git push origin '+ prj_branch)
+#             # manually enter login and password
+#             os.chdir(os.path.join('..','..'))
 
 if False:
     # push all branches at once
-    os.system('git push --all origin')
+    os.system('git push --force --all origin')
     # manually enter login and password
