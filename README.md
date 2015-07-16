@@ -17,9 +17,9 @@ categories. There is a branch for each IP project. Since the whole repository
 is around 4.47GB of data, you are advised to check out only the branch that you 
 might interested in.
 
-A list of all projects is available at:
+A searchable list of all projects is available at:
 
- www.freerangefactory.org/ip_cores.html
+ www.freerangefactory.org/cores.html
 
 Available Python scripts:
 
