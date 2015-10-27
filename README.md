@@ -10,9 +10,9 @@ guthub repository:
  
  https://github.com/fabriziotappero/ip-cores
 
-The "ip-cores" repository accounts for approximately 1102 projects spread in 16 
+The "ip-cores" repository accounts for approximately 800 projects spread in 16 
 categories. There is a branch for each IP project. Since the whole repository 
-is around 4.47GB of data, you are advised to check out only the branch that you 
+is very large, you are advised to check out only the branch that you 
 might interested in.
 
 A searchable list of all projects is available at:
