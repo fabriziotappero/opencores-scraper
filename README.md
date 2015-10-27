@@ -1,5 +1,3 @@
-<img src="http://www.freerangefactory.org/_includes/icons/logo-frf.png" alt="www.freerangefactory.org" width="200" border="10" />
-
 ## VHDL/Verilog IP CORES Scripts
 
 This repository contains few Python scripts capable to connect to the website 
