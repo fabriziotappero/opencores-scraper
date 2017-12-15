@@ -327,13 +327,18 @@ for i,x in enumerate(opencores_mem.projects_name):
 
         _url=opencores_mem.projects_url[i][ii]
         # let's download the content of the page handling a possible error
-        while True:
+        errors = 0
+        while errors < 3:
             try:
                 print '[' + time.asctime() + ']','\nDownloading HTML from:', _url
                 whole_html = br.open(_url).read()
                 break
             except:
                 print "WARNING. Getting some http error. Trying again..."
+                whole_html = None
+                errors = errors + 1
+        if whole_html is None:
+            continue
 
         _html = filter_html(whole_html)
         opencores_mem.projects_html_info[i][ii] = _html
@@ -569,7 +574,8 @@ if download_prj_svn:
 
                 # download svn file. Here we  do some error handling as done
                 # when we downloaded the project html content
-                while True:
+                errors = 0
+                while errors < 3:
                     try:
                         r = br.open(y)
                         tar_gz_content = r.read()
@@ -577,7 +583,11 @@ if download_prj_svn:
                         break
                     except:
                         print "WARNING. Getting some http error. Trying again..."
-                        
+                        tar_gz_content = None
+                        errors = errors + 1
+                if tar_gz_content is None:
+                    continue
+
                 fl_nm = re.sub('http://www.opencores.org/download,', '', y)
                 a = re.sub(' ','_',opencores_mem.categories[i])
                 b = re.sub(' ','_',opencores_mem.projects_name[i][ii])
