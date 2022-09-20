@@ -15,9 +15,9 @@ categories. There is a branch for each IP project. Since the whole repository
 is very large, you are advised to check out only the branch that you 
 might interested in.
 
-A searchable list of all projects is available at:
+A searchable list of all VHDL projects is available at:
 
- www.freerangefactory.org/cores.html
+https://fabriziotappero.github.io/opencores-scraper/cores.html
 
 Available Python scripts:
 
