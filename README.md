@@ -4,11 +4,9 @@
   </a>
 </p>
 
-## Try It Out
-A searchable list of all VHDL projects is available at:
+That's right, a simple searchable list of all VHDL projects:
 
 https://fabriziotappero.github.io/opencores-scraper/cores.html
-
 
 
 ## VHDL/Verilog IP CORES Scripts
