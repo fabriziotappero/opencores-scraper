@@ -1,3 +1,8 @@
+## Try It Out
+A searchable list of all VHDL projects is available at:
+
+https://fabriziotappero.github.io/opencores-scraper/cores.html
+
 ## VHDL/Verilog IP CORES Scripts
 
 This repository contains few Python scripts capable to connect to the website 
@@ -14,10 +19,6 @@ The "ip-cores" repository accounts for approximately 800 projects spread in 16
 categories. There is a branch for each IP project. Since the whole repository 
 is very large, you are advised to check out only the branch that you 
 might interested in.
-
-A searchable list of all VHDL projects is available at:
-
-https://fabriziotappero.github.io/opencores-scraper/cores.html
 
 Available Python scripts:
 
