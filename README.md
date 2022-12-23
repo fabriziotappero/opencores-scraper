@@ -1,7 +1,14 @@
+<p align="center">
+  <a href="https://fabriziotappero.github.io/opencores-scraper/cores.html">
+  <img src="https://github.com/fabriziotappero/opencores-scraper/blob/master/pics/search_table.png?raw=true" width = "50%" alt="" align=center/>
+</p>
+
 ## Try It Out
 A searchable list of all VHDL projects is available at:
 
 https://fabriziotappero.github.io/opencores-scraper/cores.html
+
+
 
 ## VHDL/Verilog IP CORES Scripts
 
