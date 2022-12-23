@@ -1,6 +1,7 @@
 <p align="center">
   <a href="https://fabriziotappero.github.io/opencores-scraper/cores.html">
-  <img src="https://github.com/fabriziotappero/opencores-scraper/blob/master/pics/search_table.png?raw=true" width = "50%" alt="" align=center/>
+    <img src="https://github.com/fabriziotappero/opencores-scraper/blob/master/pics/search_table.png?raw=true" width = "50%" alt="" align=center/>
+  </a>
 </p>
 
 ## Try It Out
