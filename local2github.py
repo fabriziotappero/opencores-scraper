@@ -40,7 +40,7 @@ for x in prj_categ:
                 break
 
 # note that prjs stores both categories and projects
-print "Number of local non empty projects: ", len(prjs)
+print ("Number of local non empty projects: ", len(prjs))
 
 # detect possible duplicates in branch names
 branches = []
@@ -51,7 +51,7 @@ for _ind,x in enumerate(prjs):
     branches.append(prj_branch)
 dups = [x for x in branches if branches.count(x) > 1]
 if len(dups)>0:
-    print "ERROR. Projects with same branch name:", dups
+    print ("ERROR. Projects with same branch name:", dups)
     sys.exit(0)
 
 
@@ -107,7 +107,7 @@ for _ind,x in enumerate(prjs):
     _dir = os.path.join(_cores_dir, prj_cat, prj_name)
 
     if _ind>=_max_num_prjs:
-        print _max_num_prjs, "projects have been unzipped. Leaving..."
+        print (_max_num_prjs, "projects have been unzipped. Leaving...")
         break
 
     for _fl in os.listdir(_dir):
@@ -115,14 +115,14 @@ for _ind,x in enumerate(prjs):
             prj_real_name = _fl[: -7]
             # if project code is >180MB let's skip it
             if (os.path.getsize(os.path.join(_dir, _fl))/1.0E6) > 180:# MB
-                print "Project:",_fl, ">120MB. Skipping it"
+                print ("Project:",_fl, ">120MB. Skipping it")
                 break
             try:
                 tfile = tarfile.open(os.path.join(_dir, _fl), 'r:gz')
                 tfile.extractall(os.path.join(_dir, 'tmp'))
                 tfile.close()
             except:
-                print "ERROR. Problems unzipping repo:",os.path.join(_dir, _fl)
+                print ("ERROR. Problems unzipping repo:",os.path.join(_dir, _fl))
             if os.path.exists(os.path.join(_dir, 'src')):
                 shutil.rmtree(os.path.join(_dir, 'src'))
 
@@ -179,7 +179,7 @@ for _ind,x in enumerate(prjs):
     prj_dir = os.path.join(_cores_dir, prj_cat, prj_name)
 
     if _ind>=_max_num_prjs:
-        print _max_num_prjs, "projects have been unzipped. Leaving..."
+        print (_max_num_prjs, "projects have been unzipped. Leaving...")
         break
 
     if os.path.exists(os.path.join(prj_dir, 'src')) and len(os.listdir(os.path.join(prj_dir,'src')))>0:

@@ -42,8 +42,9 @@ _github_addr = 'https://github.com/fabriziotappero/ip-cores/'
 import re, sys, os, time
 import lxml.html, pickle, tarfile
 #import ftputil
-from BeautifulSoup import BeautifulSoup, Comment
-import mechanize, cookielib
+from bs4 import BeautifulSoup, Comment
+import mechanize 
+import http.cookiejar as cookielib
 
 # function to get all opencores projects from a specific opencores URL
 def get_projects(_url):
@@ -68,7 +69,7 @@ def get_projects(_url):
 
     # make sure that number of projects is equal to the number of prj links
     if len(projects_name) != len(projects_url):
-        print 'ERROR. some projects do not have a URL.'
+        print ('ERROR. some projects do not have a URL.')
         sys.exit(1)
 
     # clean up text with regular expressions because
@@ -142,8 +143,8 @@ def rename_multiple(ar):
             for y in i:
                 ar[y]=ar[y]+' '+str(_ind)
                 _ind = _ind + 1
-                print 'WARNING. '+\
-                      'Found two projects with same name. Will rename:', ar[y]
+                print ('WARNING. '+\
+                      'Found two projects with same name. Will rename:', ar[y])
     return ar
 
 # clean up html code from unwanted portions of the page
@@ -253,9 +254,9 @@ res = br.submit()
 #print res.get_data()
 
 # Access a password protected site
-print 'Time:', time.asctime()
+print ('Time:'), time.asctime()
 r = br.open("http://www.opencores.org/projects")
-print 'Opening website: http://www.opencores.org/projects\n'
+print ('Opening website: http://www.opencores.org/projects\n')
 
 # Open page
 _html_content = r.read()
@@ -287,20 +288,20 @@ for i,x in enumerate(opencores_mem.categories_url):
     opencores_mem.projects_num.append(len(prjs_url))
 
     # count how many projects there are in this specific category
-    print 'Grand total of',len(prjs_url),\
+    print ('Grand total of',len(prjs_url),\
           'projects in the category:',\
-          opencores_mem.categories[i]
+          opencores_mem.categories[i])
 
 # count how many projects and categories there are
 opencores_mem.categories_num = len(opencores_mem.categories)
-print '\n',\
-      'Total number of available projects:', sum(opencores_mem.projects_num)
-print 'Total number of available categories:', opencores_mem.categories_num,'\n'
-print 'Time:', time.asctime()
+print ('\n',\
+      'Total number of available projects:', sum(opencores_mem.projects_num))
+print ('Total number of available categories:', opencores_mem.categories_num,'\n')
+print ('Time:', time.asctime())
 
 
 # create a structure used to store everything from opencores.org
-print 'Allocating memory to store opencores.org content.'
+print ('Allocating memory to store opencores.org content.')
 for x in opencores_mem.projects_name:
     opencores_mem.projects_html_info.append(['None']*len(x))
     opencores_mem.projects_download_url.append(['Unknown']*len(x))
@@ -317,7 +318,7 @@ for x in opencores_mem.projects_name:
 prj_without_svn_count = 0
 for i,x in enumerate(opencores_mem.projects_name):
 
-    print 'Project category:',opencores_mem.categories[i].upper()
+    print ('Project category:',opencores_mem.categories[i].upper())
     # go throuh all the projects in each category
     for ii,y in enumerate(x):
 
@@ -329,11 +330,11 @@ for i,x in enumerate(opencores_mem.projects_name):
         # let's download the content of the page handling a possible error
         while True:
             try:
-                print '[' + time.asctime() + ']','\nDownloading HTML from:', _url
+                print ('[' + time.asctime() + ']','\nDownloading HTML from:', _url)
                 whole_html = br.open(_url).read()
                 break
             except:
-                print "WARNING. Getting some http error. Trying again..."
+                print ("WARNING. Getting some http error. Trying again...")
 
         _html = filter_html(whole_html)
         opencores_mem.projects_html_info[i][ii] = _html
@@ -348,12 +349,12 @@ for i,x in enumerate(opencores_mem.projects_name):
                 # if it's not an empty link
                 if  x.get('href').replace('download,','') != '':
                     opencores_mem.projects_download_url[i][ii] = 'http://www.opencores.org' + x.get('href')
-                    print 'Latest download link found at:\nhttp://www.opencores.org' + x.get('href')+'\n'
+                    print ('Latest download link found at:\nhttp://www.opencores.org' + x.get('href')+'\n')
                     found_flag = True
                     break
         if not found_flag:
             opencores_mem.projects_download_url[i][ii] = 'No_svn_archive_link_available'
-            print 'WARNING. LATEST SVN DOWNLOAD LINK NOT FOUND\n'
+            print ('WARNING. LATEST SVN DOWNLOAD LINK NOT FOUND\n')
             prj_without_svn_count += 1
 
         # extract some info from the page. Because of the complicated structure
@@ -449,16 +450,16 @@ if os.path.isdir('./cores'):
 # create local folder structure
 if not os.path.exists('./cores'):
     os.makedirs('./cores')
-    print 'Creating folder structure.'
+    print ('Creating folder structure.')
 else:
-    print 'WARNING. Local directory "./cores" already exists. Its content will be updated'
+    print ('WARNING. Local directory "./cores" already exists. Its content will be updated')
 
 for i,x in enumerate(opencores_mem.categories):
     x = re.sub(' ','_',x)
     x = re.sub('/','-',x)
     try:
         os.makedirs('./cores/'+x)
-        print 'Creating folder:','./cores/'+x
+        print ('Creating folder:','./cores/'+x)
     except:
         pass
     for y in opencores_mem.projects_name[i]:
@@ -466,7 +467,7 @@ for i,x in enumerate(opencores_mem.categories):
         y = re.sub('/','-',y)
         try:
             os.makedirs('./cores/'+x+'/'+y)
-            print 'Creating folder:','./cores/'+x+'/'+y
+            print ('Creating folder:','./cores/'+x+'/'+y)
         except:
             pass
 
@@ -479,7 +480,7 @@ for i,x in enumerate(opencores_mem.categories):
         y = re.sub('/','-',y)
         try:
             fl_nm = './cores/'+x+'/'+y+'/index.html'
-            print 'Writing file:', fl_nm
+            print ('Writing file:', fl_nm)
             fl=open(fl_nm,'w')
 
             # add style.css link
@@ -518,12 +519,12 @@ for x in opencores_mem.projects_download_url:
     for y in x:
         if 'http://www.opencores.org/download,' in y:
             av_size =av_size +1
-print '\n','Total number of downloadable SVN project archives:', av_size
-print 'NOTE. Of the', sum(opencores_mem.projects_num), \
+print ('\n','Total number of downloadable SVN project archives:', av_size)
+print ('NOTE. Of the', sum(opencores_mem.projects_num), \
       'project folders available on opencores.com only\n', \
-      av_size,'SVN project archives are available for download.'
+      av_size,'SVN project archives are available for download.')
 
-print 'Time:', time.asctime()
+print ('Time:', time.asctime())
 
 # load info about what was downloaded last time from local file and flag
 # what needs to be update/downloaded
@@ -548,14 +549,14 @@ if os.path.isfile('./cores/opencores_local.pkl'):
                     if opencores_mem.projects_archive_last_update[i][ind] == opencores_mem_local.projects_archive_last_update[i][ind]:
                         # bingo ! this project y does not need to be upgraded
                         #DOWNLOAD_TYPE = 'partial'
-                        print "WARNING. the project", y, "doesn't need to be downloaded."
+                        print ("WARNING. the project", y, "doesn't need to be downloaded.")
                         opencores_mem.projects_can_be_downloaded[i][ii]=False
     del opencores_mem_local
 
 # let's download all project archives flagged as "True" in "opencores_mem.projects_can_be_downloaded"
 if download_prj_svn:
     _iii = 1
-    print 'Ready to download', av_size,'.zip project archives.'
+    print ('Ready to download', av_size,'.zip project archives.')
     dw_cnt = 0
     for i,x in enumerate(opencores_mem.projects_download_url):
         for ii,y in enumerate(x):
@@ -573,10 +574,10 @@ if download_prj_svn:
                     try:
                         r = br.open(y)
                         tar_gz_content = r.read()
-                        print "Downloaded repository", y
+                        print ("Downloaded repository", y)
                         break
                     except:
-                        print "WARNING. Getting some http error. Trying again..."
+                        print ("WARNING. Getting some http error. Trying again...")
                         
                 fl_nm = re.sub('http://www.opencores.org/download,', '', y)
                 a = re.sub(' ','_',opencores_mem.categories[i])
@@ -588,19 +589,19 @@ if download_prj_svn:
                 #fl_nm = str(_iii) + fl_nm
                 #_iii +=1
                 fl_nm = './cores/'+a+'/'+b+'/'+fl_nm+'.tar.gz'
-                print 'Saving file:', fl_nm
+                print ('Saving file:', fl_nm)
                 fl=open(fl_nm, 'wb')
                 fl.write(tar_gz_content)
                 fl.close()
                 dw_cnt = dw_cnt + 1
-                print dw_cnt, 'of',av_size,'.zip files downloaded.'
-    print 'Total number of opencores.org projects:', sum(opencores_mem.projects_num)
-    print 'Total number of downloaded .zip projects:', dw_cnt
-    print 'Total number of project without .zip archive:', prj_without_svn_count
+                print (dw_cnt, 'of',av_size,'.zip files downloaded.')
+    print ('Total number of opencores.org projects:', sum(opencores_mem.projects_num))
+    print ('Total number of downloaded .zip projects:', dw_cnt)
+    print ('Total number of project without .zip archive:', prj_without_svn_count)
 
     # now all projects must have been downloaded. We can now update the local
     # log file
-    print 'Saving local log file: "./cores/opencores_local.pkl".'
+    print ('Saving local log file: "./cores/opencores_local.pkl".')
     fl=open('./cores/opencores_local.pkl','w')
     pickle.dump(opencores_mem, fl)
     fl.close()
@@ -787,7 +788,7 @@ fieldset { border: 0px solid #ccc; padding: 5px;}
       font-size : 90%;}
 ''')
 fl.close()
-print 'Local style.css file created.'
+print ('Local style.css file created.')
 
 
 # created license.html file
@@ -814,7 +815,7 @@ refer to the license notice that comes with each core project description.</p>
 
 ''')
 fl.close()
-print 'Local license.html file created.'
+print ('Local license.html file created.')
 
 # created example.json file
 fl=open('./cores/example.json','w')
@@ -824,7 +825,7 @@ fl.write('''
 }
 ''')
 fl.close()
-print 'Local example.json file created.'
+print ('Local example.json file created.')
 
 # created jquery.quicksearch.js file
 fl=open('./cores/jquery.quicksearch.js','w')
@@ -979,4 +980,4 @@ fl.write('''
 }(jQuery, this, document));
 ''')
 fl.close()
-print 'Local jquery.quicksearch.js file created.'
+print ('Local jquery.quicksearch.js file created.')

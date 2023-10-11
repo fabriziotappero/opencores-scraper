@@ -31,19 +31,19 @@ for ln in _whl:
                 _tot += 1
 
                 # is it an existing page?
-                print "Checking link:", _link
+                print ("Checking link:", _link)
                 anw = requests.get('https://github.com'+_link)
                 if anw.ok:
                     _out.write(ln+"\n")
-                    print "All good."
+                    print ("All good.")
                     _fnd += 1
                 else:
-                    print "This link does not seem to exist."
+                    print ("This link does not seem to exist.")
             else:
                 _out.write(ln+"\n")
         else:
             _out.write(ln+"\n")
 
 
-print "Of a total of",_tot, "projects I have found and validated", _fnd
+print ("Of a total of",_tot, "projects I have found and validated", _fnd)
 _out.close()
