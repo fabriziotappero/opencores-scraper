@@ -57,13 +57,13 @@ def get_projects(_url):
     projects_name = []
     projects_url = []
 
-    # Find all 'a' elements inside 'tbody tr.row1 td.project'
-    for a in _lxml_content.cssselect('tbody tr td.project a'):
+    # Find all 'a' elements inside 'tbody tr.row1 td'
+    for a in _lxml_content.cssselect('table tbody tr td a'):
         projects_name.append(a.text)
 
-    # Find all 'a' elements inside 'tbody tr.row1 td.project' and
+    # Find all 'a' elements inside 'tbody tr.row1 td' and
     # get the 'href' link
-    links = _lxml_content.cssselect('tbody tr td.project a')
+    links = _lxml_content.cssselect('tbody tr td a')
     for a in links:
         projects_url.append(a.get('href'))
 
@@ -76,7 +76,7 @@ def get_projects(_url):
     # project names contains unwanted spaces and carriage returns
     # replace/delete unwanted text
     for i,x in enumerate(projects_name):
-        x = x.encode('utf-8')
+        #x = x.encode('utf-8')
         x = x.lower()
         x = re.sub('(\\n *)','',x)
         x = re.sub(' +',' ',x)
@@ -103,11 +103,11 @@ def get_projects(_url):
         projects_name[i] = x
 
     for i,x in enumerate(projects_url):
-        x = x.encode('utf-8')
-        x = re.sub('(\\n *)','',x)
-        x = re.sub(' +',' ',x)
-        x = x.lstrip().rstrip()
-        projects_url[i]= "http://www.opencores.org/" + x
+        #x = x.encode('utf-8')
+        # x = re.sub('(\\n *)','',x)
+        # x = re.sub(' +',' ',x)
+        # x = x.lstrip().rstrip()
+        projects_url[i]= "http://www.opencores.org" + x
 
     return projects_name, projects_url
 
@@ -149,7 +149,7 @@ def rename_multiple(ar):
 
 # clean up html code from unwanted portions of the page
 def filter_html(in_html):
-    doc = BeautifulSoup(in_html)
+    doc = BeautifulSoup(in_html, features="lxml")
 
 #recs = doc.findAll("div", { "class": "class_name"})
 
@@ -175,7 +175,7 @@ def filter_html(in_html):
     #    div.extract()
 
     # remove html comments
-    comments = doc.findAll(text=lambda text:isinstance(text, Comment))
+    comments = doc.findAll(string=lambda string:isinstance(string, Comment))
     [comment.extract() for comment in comments]
 
     out_html = doc.body.prettify()
@@ -265,21 +265,23 @@ _lxml_content = lxml.html.fromstring(_html_content) # turn HTML into lxml object
 # Extract all project categories with some cleaning
 for el in _lxml_content.cssselect("span.title"):
     x = el.text
-    x = x.encode('utf-8')
-    x = x.lower()
-    x = re.sub(' +',' ',x)
-    x = re.sub(' - ','-',x)
-    x = re.sub(' / ','/',x)
-    x = x.lstrip().rstrip()
-    if x.startswith('a '): x = x[2:]
-    if len(x)>50: x=x[:50]
+    #x = x.decode('utf-8')
+    #x = str(x)
+    #x = x.lower()
+    #x = re.sub(' +',' ',x)
+    #x = re.sub(' - ','-',x)
+    #x = re.sub(' / ','/',x)
+    #x = x.lstrip().rstrip()
+    x = re.sub(' ', '%20',x)
+    # if x.startswith('a '): x = x[2:]
+    # if len(x)>50: x=x[:50]
     opencores_mem.categories.append(x)
 
 # Extract all url for each project category
 # with: "GET http://opencores.org/projects,category,0"
 for x in range(len(opencores_mem.categories)):
-    opencores_mem.categories_url.append('http://www.opencores.org/projects,category,'+str(x))
-
+    opencores_mem.categories_url.append('http://www.opencores.org/projects?expanded='+str(opencores_mem.categories[x]))
+print(opencores_mem.categories_url)
 # Extract all project names for each url that defines a category
 for i,x in enumerate(opencores_mem.categories_url):
     prjs_name, prjs_url  = get_projects(x)
@@ -328,14 +330,19 @@ for i,x in enumerate(opencores_mem.projects_name):
 
         _url=opencores_mem.projects_url[i][ii]
         # let's download the content of the page handling a possible error
-        while True:
+        errors = 0
+        while errors < 3:
             try:
                 print ('[' + time.asctime() + ']','\nDownloading HTML from:', _url)
                 whole_html = br.open(_url).read()
                 break
             except:
                 print ("WARNING. Getting some http error. Trying again...")
-
+                whole_html = None
+                errors = errors +1
+        if whole_html  is None:
+            continue
+        
         _html = filter_html(whole_html)
         opencores_mem.projects_html_info[i][ii] = _html
 
@@ -443,7 +450,7 @@ for i,x in enumerate(opencores_mem.projects_name):
 # store locally all info about the latest content of opencores website
 # this file is not really used. pickle is a good way to store python stuff
 if os.path.isdir('./cores'):
-    fl=open('cores/opencores_web_latest.pkl','w')
+    fl=open('cores/opencores_web_latest.pkl','wb')
     pickle.dump(opencores_mem, fl)
     fl.close()
 
@@ -457,6 +464,7 @@ else:
 for i,x in enumerate(opencores_mem.categories):
     x = re.sub(' ','_',x)
     x = re.sub('/','-',x)
+    x = re.sub('%20','_',x)
     try:
         os.makedirs('./cores/'+x)
         print ('Creating folder:','./cores/'+x)
@@ -517,7 +525,7 @@ for i,x in enumerate(opencores_mem.categories):
 av_size = 0
 for x in opencores_mem.projects_download_url:
     for y in x:
-        if 'http://www.opencores.org/download,' in y:
+        if 'http://www.opencores.org/download' in y:
             av_size =av_size +1
 print ('\n','Total number of downloadable SVN project archives:', av_size)
 print ('NOTE. Of the', sum(opencores_mem.projects_num), \
@@ -565,12 +573,13 @@ if download_prj_svn:
             if ii>prj_per_cat_to_download:
                 break
 
-            y = y.encode('utf-8')
-            if ('http://www.opencores.org/download,' in y) and opencores_mem.projects_can_be_downloaded[i][ii]==True:
+            #y = y.encode('utf-8')
+            if ('http://www.opencores.org/download' in y) and opencores_mem.projects_can_be_downloaded[i][ii]==True:
 
                 # download svn file. Here we  do some error handling as done
                 # when we downloaded the project html content
-                while True:
+                errors = 0
+                while errors < 3:
                     try:
                         r = br.open(y)
                         tar_gz_content = r.read()
@@ -579,10 +588,16 @@ if download_prj_svn:
                     except:
                         print ("WARNING. Getting some http error. Trying again...")
                         
-                fl_nm = re.sub('http://www.opencores.org/download,', '', y)
+                        tar_gz_content = None
+                        errors = errors + 1
+                if tar_gz_content is None:
+                    continue
+                        
+                fl_nm = re.sub('http://www.opencores.org/download/','',y)
                 a = re.sub(' ','_',opencores_mem.categories[i])
                 b = re.sub(' ','_',opencores_mem.projects_name[i][ii])
                 a = re.sub('/','-',a)
+                a = re.sub('%20','_',a)
                 b = re.sub('/','-',b)
                 # let's make the file name unique so that later we can use it
                 # as repository name (not used now)
@@ -602,7 +617,7 @@ if download_prj_svn:
     # now all projects must have been downloaded. We can now update the local
     # log file
     print ('Saving local log file: "./cores/opencores_local.pkl".')
-    fl=open('./cores/opencores_local.pkl','w')
+    fl=open('./cores/opencores_local.pkl','wb')
     pickle.dump(opencores_mem, fl)
     fl.close()
 
@@ -660,12 +675,12 @@ fl.write('''
 ''')
 
 for i,x in enumerate(opencores_mem.projects_download_url):
-    _c = opencores_mem.categories[i].encode('utf-8')
+    _c = opencores_mem.categories[i]
     fl.write("<tr><td>")
-    fl.write('  <b>'+_c.upper()+'</b>'+'\n')
+    fl.write('  <b>'+str(_c.upper())+'</b>'+'\n')
     fl.write("</td></tr>\n")
     for ii,y in enumerate(opencores_mem.projects_download_url[i]):
-        y = y.encode('utf-8')
+        #y = y.encode('utf-8')
         _n = opencores_mem.projects_name[i][ii]
 
         # skip this project if empty
